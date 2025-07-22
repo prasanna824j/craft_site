@@ -1,0 +1,145 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Product Categories - Adora Crafts</title>
+    <link rel="stylesheet" href="{% static 'css/styles.css' %}">
+</head>
+<body>
+    {% include 'header.html' %}
+<style>
+    .category-container {
+        padding: 2rem;
+        max-width: 1200px;
+        margin: 0 auto;
+        margin-top: 70px;
+    }
+    .category-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 2rem;
+        margin-top: 2rem;
+    }
+    .category-card {
+        border-radius: 10px;
+        overflow: hidden;
+        transition: all 0.3s ease;
+        position: relative;
+    }
+    
+    .category-card:nth-child(1) {
+        background: linear-gradient(135deg, #FFE5E5, #FFD1D1);
+        box-shadow: 0 4px 15px rgba(255, 209, 209, 0.3);
+    }
+    
+    .category-card:nth-child(2) {
+        background: linear-gradient(135deg, #E5F4FF, #D1EBFF);
+        box-shadow: 0 4px 15px rgba(209, 235, 255, 0.3);
+    }
+    
+    .category-card:nth-child(3) {
+        background: linear-gradient(135deg, #FFE5F4, #FFD1EB);
+        box-shadow: 0 4px 15px rgba(255, 209, 235, 0.3);
+    }
+    
+    .category-card:nth-child(4) {
+        background: linear-gradient(135deg, #E5FFE5, #D1FFD1);
+        box-shadow: 0 4px 15px rgba(209, 255, 209, 0.3);
+    }
+    
+    .category-card:nth-child(5) {
+        background: linear-gradient(135deg, #FFF5E5, #FFE8D1);
+        box-shadow: 0 4px 15px rgba(255, 232, 209, 0.3);
+    }
+    .category-card:hover {
+        transform: translateY(-5px) scale(1.02);
+        box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+    }
+    
+    .category-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(255,255,255,0.1);
+        opacity: 0;
+        transition: opacity 0.3s ease;
+    }
+    
+    .category-card:hover::before {
+        opacity: 1;
+    }
+    .category-image {
+        width: 100%;
+        height: 200px;
+        object-fit: cover;
+    }
+    .category-content {
+        padding: 1.5rem;
+    }
+    .category-title {
+        font-size: 1.5rem;
+        color: #2c3e50;
+        margin-bottom: 1rem;
+        font-weight: 600;
+        position: relative;
+        display: inline-block;
+    }
+    
+    .category-title::after {
+        content: '';
+        position: absolute;
+        bottom: -4px;
+        left: 0;
+        width: 0;
+        height: 2px;
+        background: currentColor;
+        transition: width 0.3s ease;
+    }
+    
+    .category-card:hover .category-title::after {
+        width: 100%;
+    }
+    .category-description {
+        color: #34495e;
+        line-height: 1.6;
+        font-size: 0.95rem;
+        opacity: 0.9;
+    }
+    .page-title {
+        text-align: center;
+        color: #333;
+        margin-bottom: 2rem;
+        font-size: 2.5rem;
+    }
+</style>
+
+<div class="category-container">
+    <h1 class="page-title">Our Product Categories</h1>
+    
+    <div class="category-grid">
+        {% for category in categories %}
+        <div class="category-card">
+            {% if category.category_image %}
+                <img src="{{ category.category_image.url }}" alt="{{ category.category_name }}" class="category-image">
+            {% else %}
+                <img src="{% static 'images/default-category.svg' %}" alt="{{ category.category_name }}" class="category-image">
+            {% endif %}
+            <div class="category-content">
+                <h2 class="category-title">{{ category.category_name }}</h2>
+                <p class="category-description">
+                    {{ category.category_description }}
+                </p>
+                <a href="#" class="category-button">Shop by Category</a>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+    {% include 'footer.html' %}
+</body>
+</html>

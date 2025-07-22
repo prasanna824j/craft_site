@@ -1,0 +1,234 @@
+{% load static %} {% block content %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Account - Adora Crafts</title>
+    <link rel="stylesheet" href="{% static 'css/styles.css' %}">
+    <style>
+        .order-section {
+            margin-top: 30px;
+            padding: 20px;
+            background-color: #f9f9f9;
+            border-radius: 8px;
+        }
+        .order-list {
+            margin-top: 20px;
+        }
+        .order-item {
+            padding: 15px;
+            margin-bottom: 15px;
+            background-color: #fff;
+            border-radius: 5px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        .order-header {
+            display: flex;
+            justify-content: space-between;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 10px;
+            margin-bottom: 10px;
+        }
+        .order-details {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 10px;
+        }
+        .order-detail {
+            padding: 5px 0;
+        }
+        .order-status {
+            padding: 5px 10px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: bold;
+        }
+        .status-paid {
+            background-color: #d4edda;
+            color: #155724;
+        }
+        .status-pending {
+            background-color: #fff3cd;
+            color: #856404;
+        }
+        .status-failed {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+        .payment-id {
+            font-size: 12px;
+            color: #6c757d;
+            word-break: break-all;
+        }
+    </style>
+    <script>
+        function toggleEditForm() {
+            const form = document.getElementById('editForm');
+            form.style.display = form.style.display === 'none' ? 'block' : 'none';
+        }
+        
+        function toggleEditAddressForm(id) {
+            const form = document.getElementById(id);
+            form.style.display = form.style.display === 'none' ? 'block' : 'none';
+        }
+    </script>
+</head>
+<body>
+    {% include 'header.html' %}
+    <main class="account-page">
+        <div class="account-container">
+            <div class="account-header">
+                <div class="account-info">
+                    <h2>Account Information</h2>
+                    <p><strong>Name:</strong> {{ user.user_name }}</p>
+                    <p><strong>Email:</strong> {{ user.email }}</p>
+                    <p><strong>Phone:</strong> {{ user.phone }}</p>
+                    <p><strong>Address:</strong> {{ user.street_address }}</p>
+                    <p><strong>City:</strong> {{ user.city }}</p>
+                    <p><strong>State:</strong> {{ user.state }}</p>
+                    <p><strong>ZIP Code:</strong> {{ user.zip_code }}</p>
+                    <button onclick="toggleEditForm()" class="edit-btn">Edit Profile</button>
+                </div>
+                
+                <!-- Order History Section -->
+                <div class="order-section">
+                    <h2>Order History</h2>
+                    <div class="order-list">
+                        {% for order in orders %}
+                        <div class="order-item">
+                            <div class="order-header">
+                                <h3>Order #{{ order.id }}</h3>
+                                <span class="order-status {% if order.is_paid %}status-paid{% elif 'Failed' in order.status %}status-failed{% else %}status-pending{% endif %}">
+                                    {{ order.status }}
+                                </span>
+                            </div>
+                            <div class="order-details">
+                                <div class="order-detail">
+                                    <strong>Date:</strong> {{ order.ordered_at|date:"M d, Y" }}
+                                </div>
+                                <div class="order-detail">
+                                    <strong>Total:</strong> ₹{{ order.total_price }}
+                                </div>
+                                <div class="order-detail">
+                                    <strong>Items:</strong> {{ order.total_quantity }}
+                                </div>
+                                {% if order.razorpay_payment_id %}
+                                <div class="order-detail">
+                                    <strong>Payment ID:</strong>
+                                    <div class="payment-id">{{ order.razorpay_payment_id }}</div>
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        {% empty %}
+                        <p>No orders found.</p>
+                        {% endfor %}
+                    </div>
+                </div>
+                
+                <div class="edit-form" id="editForm" style="display: none;">
+                    <h2>Edit Profile</h2>
+                    <form method="POST" action="/account_update/">
+                        {% csrf_token %}
+                        <div class="form-group">
+                            <label for="username">Username</label>
+                            <input type="text" id="username" name="username" value="{{ user.user_name }}">
+                        </div>
+                        <div class="form-group">
+                            <label for="phone">Phone</label>
+                            <input type="text" id="phone" name="phone" value="{{ user.phone }}">
+                        </div>
+                        <div class="form-group">
+                            <label for="email">Email</label>
+                            <input type="email" id="email" name="email" value="{{ user.email }}">
+                        </div>
+                        
+                        <div class="form-actions">
+                            <button type="button" class="btn-secondary" onclick="toggleEditForm()">Cancel</button>
+                            <button type="submit" class="btn-primary">Save Changes</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            
+            <div class="account-grid">
+                <!-- <div class="account-section">
+                    <h2>Recent Orders</h2>
+                    <div class="order-list">
+                        <div class="order-item">
+                            <div class="order-header">
+                                <span>Order #12345</span>
+                                <span>March 15, 2024</span>
+                            </div>
+                            <div class="order-content">
+                                <img src="https://images.unsplash.com/photo-1610701596007-11502861dcfa?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=80" alt="Ceramic Vase">
+                                <div class="order-details">
+                                    <h3>Handmade Ceramic Vase</h3>
+                                    <p>Status: Delivered</p>
+                                    <button class="btn-secondary">View Details</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div> -->
+                
+                <div class="account-section">
+                    <h2>Saved Address</h2>
+                    <div class="address-list">
+                        <div class="address-card">
+                            <h3>Home</h3>
+                            <p>{{ request.user.street_address }}</p>
+                            <p>{{ request.user.city }}, {{ request.user.state }} {{ request.user.zip_code }}</p>
+                
+                            <div class="address-actions">
+                                <button class="btn-secondary" onclick="toggleEditAddressForm('edit-address')">Edit</button>
+                            </div>
+                
+                            <div class="address-edit-form" id="edit-address" style="display: none;">
+                                <h3>Edit Address</h3>
+                                <form method="POST" action="/update_address/">
+                                    {% csrf_token %}
+                                    
+                                    <div class="form-group">
+                                        <label for="address_name">Address Name</label>
+                                        <input type="text" id="address_name" name="address_name" value="{{ request.user.user_name }}">
+                                    </div>
+                
+                                    <div class="form-group">
+                                        <label for="street">Street Address</label>
+                                        <input type="text" id="street" name="street" value="{{ request.user.street }}">
+                                    </div>
+                
+                                    <div class="form-group">
+                                        <label for="city">City</label>
+                                        <input type="text" id="city" name="city" value="{{ request.user.city }}">
+                                    </div>
+                
+                                    <div class="form-group">
+                                        <label for="state">State</label>
+                                        <input type="text" id="state" name="state" value="{{ request.user.state }}">
+                                    </div>
+                
+                                    <div class="form-group">
+                                        <label for="zip">ZIP Code</label>
+                                        <input type="text" id="zip" name="zip" value="{{ request.user.zip }}">
+                                    </div>
+                
+                                    <div class="form-actions">
+                                        <button type="button" class="btn-secondary" onclick="toggleEditAddressForm('edit-address')">Cancel</button>
+                                        <button type="submit" class="btn-primary">Save Changes</button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+            </div>
+        </div>
+    </main>
+{% include 'footer.html' %}
+</body>
+</html>
+{% endblock %}

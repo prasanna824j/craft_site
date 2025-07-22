@@ -1,0 +1,69 @@
+{% load static %} {% block content %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Orders - Adora Crafts</title>
+    <link rel="stylesheet" href="{% static 'css/styles.css' %}">
+</head>
+<body>
+    {% include 'header.html' %}
+
+    <main class="order-page">
+        <div class="order-container">
+            <h1>My Orders</h1>
+            
+            {% if orders %}
+                {% for order in orders %}
+                    <div class="order-card">
+                        <div class="order-header">
+                            <h3>Order #{{ order.id }}</h3>
+                            <p class="order-date">{{ order.created_at|date:"F j, Y" }}</p>
+                        </div>
+                        
+                        <div class="order-items">
+                            {% for item in order.orderitem_set.all %}
+                                <div class="order-item">
+                                    <img src="{{ item.product.product_image.url }}" alt="{{ item.product.product_name }}">
+                                    <div class="item-details">
+                                        <h4>{{ item.product.product_name }}</h4>
+                                        <p class="price">${{ item.price }}</p>
+                                        <p>Quantity: {{ item.quantity }}</p>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                        
+                        <div class="order-summary">
+                            <div class="summary-row">
+                                <span>Total Items:</span>
+                                <span>{{ order.total_quantity }}</span>
+                            </div>
+                            <div class="summary-row">
+                                <span>Subtotal:</span>
+                                <span>${{ order.total_price }}</span>
+                            </div>
+                            <div class="summary-row">
+                                <span>Shipping:</span>
+                                <span>${{ shipping }}</span>
+                            </div>
+                            <div class="summary-row total">
+                                <span>Order Total:</span>
+                                <span>${{ order.total_price|add:shipping }}</span>
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+            {% else %}
+                <div class="empty-orders">
+                    <p>You haven't placed any orders yet.</p>
+                    <a href="/" class="cta-button">Start Shopping</a>
+                </div>
+            {% endif %}
+        </div>
+    </main>
+{% include 'footer.html' %}
+</body>
+</html>
+{% endblock %}

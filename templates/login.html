@@ -1,0 +1,315 @@
+{% load static %} {% block content %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - Adora Crafts</title>
+    <link rel="stylesheet" href="{% static 'css/styles.css' %}">
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Raleway:wght@400;500;600&display=swap" rel="stylesheet">
+</head>
+<body>
+    
+    <div class="login-container">
+        <div class="login-card">
+            <div class="login-header">
+                <h1>Welcome Back</h1>
+                <p>Sign in to your account</p>
+            </div>
+
+            {% if messages %}
+            <div class="messages">
+                {% for message in messages %}
+                <div class="message {% if message.tags %}{{ message.tags }}{% endif %}">
+                    {{ message }}
+                </div>
+                {% endfor %}
+            </div>
+            {% endif %}
+            
+            <form method="POST" action="/login/" class="login-form">
+                {% csrf_token %}
+                <div class="form-group">
+                    <label for="username">Email</label>
+                    <div class="input-wrapper">
+                        <span class="input-icon">👤</span>
+                        <input type="text" id="email" name="email" placeholder="Enter your email" required>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="password">Password</label>
+                    <div class="input-wrapper">
+                        <span class="input-icon">🔒</span>
+                        <input type="password" id="password" name="password" placeholder="Enter your password" required>
+                        <i class="fas fa-eye" id="togglePassword"
+     style="position: absolute; top: 72%; right: 15px; transform: translateY(-50%);
+            cursor: pointer; color: gray;"></i>
+                    </div>
+                </div>
+                
+                <div class="form-options">
+                    <div class="remember-me">
+                        <input type="checkbox" id="remember" name="remember">
+                        <label for="remember">Remember me</label>
+                    </div>
+                    <a href="/password_reset" class="forgot-password">Forgot password?</a>
+                </div>
+                
+                <button type="submit" class="submit-button">Sign In</button>
+                
+            </form>
+            
+            <div class="login-footer">
+                <p>Don't have an account? <a href="/signup" class="signup-link">Sign up here</a></p>
+            </div>
+            
+        </div>
+    </div>
+      <script>
+  const togglePassword = document.getElementById('togglePassword');
+  const passwordInput = document.getElementById('password');
+
+  togglePassword.addEventListener('click', function () {
+    const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+    passwordInput.setAttribute('type', type);
+
+    // Toggle icon
+    this.classList.toggle('fa-eye');
+    this.classList.toggle('fa-eye-slash');
+  });
+</script>
+    <script>
+        // Add subtle animation to form inputs
+        const inputs = document.querySelectorAll('input');
+        inputs.forEach(input => {
+            input.addEventListener('focus', function() {
+                this.parentElement.classList.add('input-focus');
+            });
+            input.addEventListener('blur', function() {
+                this.parentElement.classList.remove('input-focus');
+            });
+        });
+    </script>
+</body>
+</html>
+{% endblock %}
+
+<style>
+    body {
+        background-image: url('https://images.unsplash.com/photo-1464699908537-0954e50791ee?ixlib=rb-1.2.1&auto=format&fit=crop&w=1920&q=80');
+        background-size: cover;
+        background-position: center;
+        background-repeat: no-repeat;
+        background-attachment: fixed;
+        font-family: 'Raleway', sans-serif;
+        color: #333;
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+        padding-top: 0;
+    }
+    
+    .login-container {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        flex: 1;
+        padding: 2rem;
+    }
+    
+    .login-card {
+        max-width: 450px;
+        width: 100%;
+        background-color: rgba(255, 255, 255, 0.95);
+        border-radius: 12px;
+        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+        overflow: hidden;
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+        animation: fadeIn 0.5s ease-out;
+    }
+    
+    .login-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 12px 25px rgba(0, 0, 0, 0.2);
+    }
+    
+    .login-header {
+        padding: 2rem 2rem 1rem;
+        text-align: center;
+    }
+    
+    .login-header h1 {
+        font-family: 'Playfair Display', serif;
+        font-size: 2.2rem;
+        margin-bottom: 0.5rem;
+        color: #333;
+    }
+    
+    .login-header p {
+        color: #666;
+        font-size: 1rem;
+    }
+    
+    .login-form {
+        padding: 1rem 2rem 2rem;
+    }
+    
+    .messages {
+        margin-bottom: 1.5rem;
+        padding: 0 2rem;
+    }
+    
+    .message {
+        padding: 0.75rem 1rem;
+        margin-bottom: 0.5rem;
+        border-radius: 8px;
+        font-size: 0.9rem;
+    }
+    
+    .message.error {
+        background-color: #f8d7da;
+        color: #721c24;
+        border: 1px solid #f5c6cb;
+    }
+    
+    .message.success {
+        background-color: #d4edda;
+        color: #155724;
+        border: 1px solid #c3e6cb;
+    }
+    
+    .form-group {
+        margin-bottom: 1.5rem;
+    }
+    
+    .form-group label {
+        display: block;
+        margin-bottom: 0.5rem;
+        font-weight: 500;
+        color: #555;
+    }
+    
+    .input-wrapper {
+        position: relative;
+        display: flex;
+        align-items: center;
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        overflow: hidden;
+        transition: all 0.3s ease;
+    }
+    
+    .input-wrapper.input-focus {
+        border-color: #007BFF;
+        box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.1);
+    }
+    
+    .input-icon {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 40px;
+        background-color: #f8f9fa;
+        border-right: 1px solid #ddd;
+        padding: 0.75rem 0;
+    }
+    
+    .form-group input {
+        flex: 1;
+        border: none;
+        padding: 0.75rem 1rem;
+        font-size: 1rem;
+        outline: none;
+        background-color: #fff;
+        width: 100%;
+    }
+    
+    .form-options {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1.5rem;
+        font-size: 0.9rem;
+    }
+    
+    .remember-me {
+        display: flex;
+        align-items: center;
+    }
+    
+    .remember-me input {
+        margin-right: 0.5rem;
+    }
+    
+    .forgot-password {
+        color: #007BFF;
+        text-decoration: none;
+        transition: color 0.3s ease;
+    }
+    
+    .forgot-password:hover {
+        color: #0056b3;
+        text-decoration: underline;
+    }
+    
+    .submit-button {
+        width: 100%;
+        background-color: #007BFF;
+        color: white;
+        border: none;
+        padding: 0.875rem;
+        border-radius: 8px;
+        font-size: 1rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+    
+    .submit-button:hover {
+        background-color: #0056b3;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    }
+    
+    .submit-button:active {
+        transform: translateY(0);
+    }
+    
+    .login-footer {
+        padding: 1.5rem 2rem;
+        text-align: center;
+        border-top: 1px solid #eee;
+        background-color: #f9f9f9;
+    }
+    
+    .signup-link {
+        color: #007BFF;
+        font-weight: 600;
+        text-decoration: none;
+        transition: color 0.3s ease;
+    }
+    
+    .signup-link:hover {
+        color: #0056b3;
+        text-decoration: underline;
+    }
+    
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(20px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+    
+    @media (max-width: 576px) {
+        .login-card {
+            max-width: 100%;
+            border-radius: 0;
+        }
+        
+        .login-container {
+            padding: 1rem;
+        }
+    }
+</style>

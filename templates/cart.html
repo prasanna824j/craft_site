@@ -1,0 +1,361 @@
+{% load static %} {% block content %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shopping Cart - Adora Crafts</title>
+    <link rel="stylesheet" href="{% static 'css/styles.css' %}">
+    <link rel="stylesheet" href="{% static 'css/cart.css' %}">
+    <link rel="stylesheet" href="{% static 'css/cart_modal.css' %}">
+</head>
+<body>
+    <!-- Include the same navigation and side nav from index.html -->
+    {% include 'header.html' %}    
+    
+    <main class="cart-page">
+        <div class="cart-container">
+            <h1>Shopping Cart</h1>
+    
+            <div class="cart-items">
+                {% for item in cart_items %}
+                <div class="cart-item" id="cart-item-{{ item.id }}">
+                    <img src="{{ item.product.images.first.image.url }}" alt="{{ item.product.product_name }}" width="100">
+                    <div class="item-details">
+                        <h3>{{ item.product.product_name }}</h3>
+                        <p class="price">₹{{ item.product.price }}</p>
+                        <div class="quantity-controls">
+                            <button onclick="updateCart('{{ item.id }}', -1)">-</button>
+                            <input type="number" value="{{ item.quantity }}" min="1" id="cart-qty-{{ item.id }}" readonly>
+                            <button onclick="updateCart('{{ item.id }}', 1)">+</button>
+                        </div>
+                    </div>
+                    <button class="remove-item" onclick="removeCartItem('{{ item.id }}')">&times;</button>
+                </div>
+
+                
+                {% empty %}
+                <p>No items in cart.</p>
+                {% endfor %}
+            </div>
+            {% if cart_items %}
+            <div class="cart-summary">
+                <div class="summary-row">
+                    <span>Subtotal</span>
+                    <span>₹{{ subtotal }}</span>
+                </div>
+                <div class="summary-row">
+                    <span>Shipping</span>
+                    <span>₹{{ shipping }}</span>
+                </div>
+                <div class="summary-row total">
+                    <span>Total</span>
+                    <span>₹{{ total }}</span>
+                </div>
+                <button class="checkout-btn" id="create-order-btn" onclick="showAddressModal()">Place Order</button>
+
+                <!-- Address Modal -->
+                <div id="address-modal" class="payment-modal">
+                    <div class="modal-content">
+                        <span class="close-modal" onclick="closeAddressModal()">&times;</span>
+                        <h2 class="modal-title">Delivery Address</h2>
+                        <form action="/orders/" method="post" id="order-form" onsubmit="return validateAddress()">
+                            {% csrf_token %}
+                            <div class="form-group">
+                                <label for="street_address">Street Address*</label>
+                                <input type="text" id="street_address" name="street_address" value="{{ request.user.street_address }}" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="city">City*</label>
+                                <input type="text" id="city" name="city" value="{{ request.user.city }}" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="state">State*</label>
+                                <input type="text" id="state" name="state" value="{{ request.user.state }}" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="zip_code">ZIP Code*</label>
+                                <input type="text" id="zip_code" name="zip_code" value="{{ request.user.zip_code }}" required pattern="[0-9]{6}" title="Please enter a valid 6-digit ZIP code">
+                            </div>
+                            <div class="form-group">
+                                <label for="phone">Phone Number*</label>
+                                <input type="tel" id="phone" name="phone" value="{{ request.user.phone }}" required pattern="[0-9]{10}" title="Please enter a valid 10-digit phone number">
+                            </div>
+                            <div class="modal-actions">
+                                <button type="submit" class="retry-payment">Proceed to Order</button>
+                                <button type="button" class="cancel-payment" onclick="closeAddressModal()">Cancel</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+                
+                {% if razorpay_order_id %}
+                <!-- <div class="payment-section">
+                    <button id="rzp-button" class="payment-btn">Pay with Razorpay</button>
+                </div> -->
+                <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+                <style>
+                .payment-modal {
+                    display: none;
+                    position: fixed;
+                    top: 0;
+                    left: 0;
+                    width: 100%;
+                    height: 100%;
+                    background-color: rgba(0,0,0,0.5);
+                    z-index: 1000;
+                }
+                
+                .modal-content {
+                    position: relative;
+                    background-color: #fff;
+                    margin: 15% auto;
+                    padding: 20px;
+                    width: 90%;
+                    max-width: 500px;
+                    border-radius: 8px;
+                    text-align: center;
+                }
+                
+                .close-modal {
+                    position: absolute;
+                    right: 10px;
+                    top: 10px;
+                    font-size: 24px;
+                    cursor: pointer;
+                    color: #666;
+                }
+                
+                .modal-title {
+                    margin-bottom: 15px;
+                    color: #e74c3c;
+                }
+                
+                .modal-message {
+                    margin-bottom: 20px;
+                    color: #666;
+                }
+                
+                .modal-actions {
+                    display: flex;
+                    justify-content: center;
+                    gap: 10px;
+                }
+                
+                .retry-payment {
+                    padding: 10px 20px;
+                    background-color: #3498db;
+                    color: white;
+                    border: none;
+                    border-radius: 4px;
+                    cursor: pointer;
+                }
+                
+                .cancel-payment {
+                    padding: 10px 20px;
+                    background-color: #95a5a6;
+                    color: white;
+                    border: none;
+                    border-radius: 4px;
+                    cursor: pointer;
+                }
+                </style>
+                <div id="payment-error-modal" class="payment-modal">
+                    <div class="modal-content">
+                        <span class="close-modal">&times;</span>
+                        <h2 class="modal-title">Payment Failed</h2>
+                        <p class="modal-message" id="error-message">There was an issue processing your payment.</p>
+                        <div class="modal-actions">
+                            <button class="retry-payment" onclick="retryPayment()">Retry Payment</button>
+                            <button class="cancel-payment" onclick="closePaymentModal()">Cancel</button>
+                        </div>
+                    </div>
+                </div>
+                
+                <script>
+                function showPaymentModal(message) {
+                    document.getElementById('error-message').textContent = message;
+                    document.getElementById('payment-error-modal').style.display = 'block';
+                }
+                
+                function closePaymentModal() {
+                    document.getElementById('payment-error-modal').style.display = 'none';
+                }
+                
+                function retryPayment() {
+                    closePaymentModal();
+                    document.getElementById('rzp-button').click();
+                }
+                
+                // Update the Razorpay handler
+                var options = {
+                    "key": "{{ razorpay_merchant_key }}",
+                    "amount": "{{ total }}00", // Amount in paise
+                    "currency": "INR",
+                    "name": "Adora Crafts",
+                    "description": "Purchase from Adora Crafts",
+                    "order_id": "{{ razorpay_order_id }}",
+                    "handler": function (response){
+                        // On successful payment
+                        document.getElementById('razorpay_payment_id').value = response.razorpay_payment_id;
+                        document.getElementById('razorpay_order_id').value = response.razorpay_order_id;
+                        document.getElementById('razorpay_signature').value = response.razorpay_signature;
+                        document.getElementById('razorpay-form').submit();
+                    },
+                    "prefill": {
+                        "name": "{{ request.user.user_name }}",
+                        "email": "{{ request.user.email }}",
+                        "contact": "{{ request.user.phone }}"
+                    },
+                    "theme": {
+                        "color": "#3399cc"
+                    },
+                    "modal": {
+                        "ondismiss": function() {
+                            showPaymentModal('You cancelled the payment.');
+                        }
+                    }
+                };
+                var rzp = new Razorpay(options);
+                document.getElementById('rzp-button').addEventListener('click', function(e){
+                    e.preventDefault();
+                    rzp.open();
+                });
+                
+                rzp.on('payment.failed', function (response){
+                    showPaymentModal(response.error.description || 'Payment failed. Please try again.');
+                });
+                </script>
+                
+                <!-- Hidden form to submit payment details to server -->
+                <form action="{% url 'razorpay_callback' %}" method="POST" id="razorpay-form" style="display: none;">
+                    {% csrf_token %}
+                    <input type="hidden" name="razorpay_payment_id" id="razorpay_payment_id">
+                    <input type="hidden" name="razorpay_order_id" id="razorpay_order_id">
+                    <input type="hidden" name="razorpay_signature" id="razorpay_signature">
+                </form>
+                {% endif %}
+            </div>
+            {% endif %}
+        </div>
+    </main>
+    <script>
+        function getCookie(name) {
+                let cookieValue = null;
+                if (document.cookie && document.cookie !== '') {
+                    const cookies = document.cookie.split(';');
+                    for (let cookie of cookies) {
+                        const trimmed = cookie.trim();
+                        if (trimmed.startsWith(name + '=')) {
+                            cookieValue = decodeURIComponent(trimmed.substring(name.length + 1));
+                            break;
+                        }
+                    }
+                }
+                return cookieValue;
+            }
+      
+        function updateCart(cartItemId, change) {
+    const input = document.getElementById(`cart-qty-${cartItemId}`);
+    let currentQty = parseInt(input.value);
+    let newQty = currentQty + change;
+
+    if (newQty < 1) return;  // Prevent 0 or negative quantity
+
+    fetch('/update_cart/', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': getCookie('csrftoken')
+        },
+        body: JSON.stringify({
+            cart_item_id: cartItemId,
+            quantity: newQty
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.status === 'success') {
+            input.value = newQty;
+            location.reload();  // reload to refresh total/subtotal (or update dynamically)
+        } else {
+            showToast(data.message, data.level || 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Update cart error:', error);
+        showToast('Something went wrong', 'error');
+    });
+}
+
+function removeCartItem(cartItemId) {
+    fetch('/remove_cart_item/', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': getCookie('csrftoken')
+        },
+        body: JSON.stringify({
+            cart_item_id: cartItemId
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.status === 'success') {
+            document.querySelector(`#cart-item-${cartItemId}`).remove(); // or reload page
+            location.reload();
+        } else {
+            showToast(data.message, data.level || 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Remove cart item error:', error);
+        showToast('Something went wrong', 'error');
+    });
+}
+
+function showAddressModal() {
+    document.getElementById('address-modal').style.display = 'block';
+}
+
+function closeAddressModal() {
+    document.getElementById('address-modal').style.display = 'none';
+}
+
+function validateAddress() {
+    const streetAddress = document.getElementById('street_address').value.trim();
+    const city = document.getElementById('city').value.trim();
+    const state = document.getElementById('state').value.trim();
+    const zipCode = document.getElementById('zip_code').value.trim();
+    const phone = document.getElementById('phone').value.trim();
+
+    if (!streetAddress || !city || !state || !zipCode || !phone) {
+        alert('Please fill in all required address fields.');
+        return false;
+    }
+
+    if (!/^[0-9]{6}$/.test(zipCode)) {
+        alert('Please enter a valid 6-digit ZIP code.');
+        return false;
+    }
+
+    if (!/^[0-9]{10}$/.test(phone)) {
+        alert('Please enter a valid 10-digit phone number.');
+        return false;
+    }
+
+    return true;
+}
+
+// Close modal when clicking outside of it
+window.onclick = function(event) {
+    const modal = document.getElementById('address-modal');
+    if (event.target === modal) {
+        closeAddressModal();
+    }
+}
+    </script>
+{% include 'footer.html' %}
+</body>
+</html>
+{% endblock %}

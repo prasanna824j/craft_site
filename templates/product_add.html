@@ -1,0 +1,704 @@
+{% load static %} {% block content %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Add Product - Adora Crafts</title>
+    <link rel="stylesheet" href="{% static 'css/styles.css' %}">
+</head>
+<body>
+    
+
+    <!-- Search Overlay,Header -->
+    {% include 'header.html' %}
+
+
+    <main class="product-add-page">
+        <button id="add-category-btn" class="add-product-btn">Add Category</button>
+        <button id="add-product-btn" class="add-product-btn" style="bottom: 90px !important;">Add Product</button>
+        <div class="form-container" id="category-form-container" style="display: none;">
+            <button class="close-form-btn" onclick="toggleCategoryForm()">&times;</button>
+            <h1>Add New Category</h1>
+            
+            <form method="POST" action="/add_category/" enctype="multipart/form-data" class="product-form">
+                {% csrf_token %}
+                <div class="form-group">
+                    <label for="name">Category Name</label>
+                    <input type="text" id="name" name="name" required>
+                </div>
+                <div class="form-group">
+                    <label for="category_image">Category Image</label>
+                    <input type="file" id="category_image" name="category_image" accept="image/*" required>
+                </div>
+                <div class="form-group">
+                    <label for="category_description">Category Description</label>
+                    <textarea id="category_description" name="category_description" required></textarea>
+                </div>
+                <button type="submit" class="submit-button">Add Category</button>
+            </form>
+        </div>
+        <div class="form-container" id="form-container" style="display: none;">
+            <button class="close-form-btn" onclick="toggleProductForm()">&times;</button>
+            <h1>Add New Product</h1>
+            
+            <form method="POST" action="/product_add/" enctype="multipart/form-data" class="product-form">
+                {% csrf_token %}
+                <div class="form-group">
+                    <label for="name">Product Name</label>
+                    <input type="text" id="name" name="name" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="description">Description</label>
+                    <textarea id="description" name="description" required></textarea>
+                </div>
+                
+                <div class="form-group">
+                    <label for="price">Price (₹)</label>
+                    <input type="number" id="price" name="price" step="0.01" min="0" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="category">Category</label>
+                    <select id="category" name="category" required>
+                        <option value="">Select a category</option>
+                        {% for category in categories %}
+                            <option value="{{ category.id }}">{{ category }}</option>
+                            {% endfor %}
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label for="image">Product Image</label>
+                    <input type="file" id="image" name="image" accept="image/*" multiple  required>
+                </div>
+                
+                <button type="submit" class="submit-button">Add Product</button>
+            </form>
+        </div>
+        
+        <div class="form-container" id="edit-form-container" style="display: none;">
+            <button class="close-form-btn" onclick="toggleEditForm()">&times;</button>
+            <h1>Edit Product</h1>
+            <form method="POST" id="edit-form" enctype="multipart/form-data" class="product-form" >
+                {% csrf_token %}
+                
+                <input type="hidden" id="edit-id" name="id">
+                
+                <div class="form-group">
+                    <label for="edit-name">Product Name</label>
+                    <input type="text" id="edit-name" name="product_name" required value="{{ product.product_name }}">
+                </div>
+                
+                <div class="form-group">
+                    <label for="edit-price">Price (₹)</label>
+                    <input type="number" id="edit-price" name="price" step="0.01" min="0" required value="{{ product.price }}">
+                </div>
+                
+                <div class="form-group">
+                    <label for="edit-stock">Stock</label>
+                    <input type="number" id="edit-stock" name="stock_no" min="0" required value="{{ product.stock_no }}">
+                </div>
+                
+                <button type="submit" class="submit-button">Update Product</button>
+            </form>
+            
+        </div>
+    </main>
+
+    <section class="featured-products">
+        <h2>All Products</h2>
+        
+        <div class="filter-bar">
+            <button class="filter-btn active" data-category="all">All</button>
+            {% for category in categories %}
+                <button class="filter-btn" data-category="{{ category }}">{{ category }}</button>
+            {% endfor %}
+        </div>
+        
+        <div class="product-grid">
+            {% for product in products %}
+                <div class="product-card" data-category="{{ product.category }}">
+                    <div class="product-image-slider" id="slider-{{ product.id }}">
+                        <button class="slide-btn prev" onclick="slideImage({{ product.id }}, -1)">&#10094;</button>
+                
+                        <img src="{{ product.images.first.image.url }}" 
+                             alt="{{ product.product_name }}" 
+                             id="product-img-{{ product.id }}" 
+                             class="product-gallery-img" 
+                             onclick="openFullView({{ product.id }}, 0)">
+                
+                        <button class="slide-btn next" onclick="slideImage({{ product.id }}, 1)">&#10095;</button>
+                
+                        <script>
+                            window.productImages = window.productImages || {};
+                            window.productImages[{{ product.id }}] = [
+                                {% for image in product.images.all %}
+                                    "{{ image.image.url }}"{% if not forloop.last %},{% endif %}
+                                {% endfor %}
+                            ];
+                        </script>
+                    </div>
+                    
+                    
+                    <div class="product-info">
+                        <h3>{{ product.product_name }}</h3>
+                        <p class="price">₹{{ product.price }}</p>
+                        <p class="stock">No.of stocks - {{ product.stock_no }}</p>
+                        <button class="add-to-cart" onclick="openEditForm('{{ product.id }}', '{{ product.product_name }}', '{{ product.price }}', '{{ product.stock_no }}')">Edit Product</button>
+                        
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+
+        <div id="imageModal" class="image-modal">
+            <span class="close-btn" onclick="closeFullView()">&times;</span>
+            <img class="modal-content" id="full-image">
+            <a class="prev" onclick="navigateFull(-1)">&#10094;</a>
+            <a class="next" onclick="navigateFull(1)">&#10095;</a>
+        </div>
+        
+    </section>
+
+    <style>
+        .image-modal {
+            display: none;
+            position: fixed;
+            z-index: 9999;
+            padding-top: 60px;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.9);
+        }
+        
+        .modal-content {
+            display: block;
+            margin: auto;
+            max-width: 90%;
+            max-height: 80vh;
+        }
+        
+        .close-btn {
+            position: absolute;
+            top: 20px;
+            right: 40px;
+            color: white;
+            font-size: 36px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        
+        .prev, .next {
+            position: absolute;
+            top: 50%;
+            color: white;
+            font-size: 40px;
+            padding: 10px;
+            cursor: pointer;
+            user-select: none;
+            transform: translateY(-50%);
+        }
+        
+        .prev { left: 20px; }
+        .next { right: 20px; }
+        
+        .prev:hover, .next:hover, .close-btn:hover {
+            color: #ccc;
+        }
+        </style>
+<script>
+    let currentProductId = null;
+    let currentImageIndex = 0;
+
+    function openFullView(productId, imageIndex = 0) {
+        currentProductId = productId;
+        currentImageIndex = imageIndex;
+
+        const imageList = window.productImages[productId];
+        if (!imageList || imageList.length === 0) return;
+
+        document.getElementById('full-image').src = imageList[imageIndex];
+        document.getElementById('imageModal').style.display = 'block';
+    }
+
+    function closeFullView() {
+        document.getElementById('imageModal').style.display = 'none';
+    }
+
+    function navigateFull(direction) {
+        const imageList = window.productImages[currentProductId];
+        if (!imageList) return;
+
+        currentImageIndex = (currentImageIndex + direction + imageList.length) % imageList.length;
+        document.getElementById('full-image').src = imageList[currentImageIndex];
+    }
+</script>
+        
+<style>
+    .product-image-slider {
+        position: relative;
+        text-align: center;
+    }
+    
+    .product-gallery-img {
+        max-width: 100%;
+        height: 250px;
+        object-fit: contain;
+        border-radius: 8px;
+        transition: 0.3s ease-in-out;
+        cursor: pointer;
+    }
+    
+    .slide-btn {
+        position: absolute;
+        top: 50%;
+        transform: translateY(-50%);
+        background: rgba(0,0,0,0.5);
+        border: none;
+        color: white;
+        font-size: 24px;
+        padding: 5px 10px;
+        cursor: pointer;
+        border-radius: 4px;
+        z-index: 2;
+    }
+    
+    .slide-btn.prev { left: 5px; }
+    .slide-btn.next { right: 5px; }
+    
+    .slide-btn:hover {
+        background: rgba(0,0,0,0.7);
+    }
+    </style>
+    
+    <script>
+        let currentImageIndexes = {};
+    
+        function slideImage(productId, direction) {
+            const imageList = window.productImages[productId];
+            if (!imageList || imageList.length === 0) return;
+    
+            if (!currentImageIndexes[productId]) currentImageIndexes[productId] = 0;
+    
+            let index = currentImageIndexes[productId];
+            index = (index + direction + imageList.length) % imageList.length;
+    
+            const imgElement = document.getElementById('product-img-' + productId);
+            if (imgElement) imgElement.src = imageList[index];
+    
+            currentImageIndexes[productId] = index;
+        }
+    </script>
+
+    <style>
+        .product-add-page {
+            padding: 2rem;
+            max-width: 800px;
+            margin: 0 auto;
+            position: relative;
+        }
+
+        .add-product-btn {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            background: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 50px;
+            padding: 15px 20px;
+            font-size: 1rem;
+            font-weight: bold;
+            cursor: pointer;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            transition: all 0.3s ease;
+            z-index: 100;
+        }
+
+        .add-product-btn:hover {
+            background: #45a049;
+            transform: translateY(-3px);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3);
+        }
+
+        .form-container {
+            background: #dddddd;
+            padding: 2rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            margin-bottom: 2rem;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 1000;
+            max-width: 600px;
+            width: 90%;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+        
+        .close-form-btn {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: #666;
+        }
+
+        .product-form {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        label {
+            font-weight: 600;
+            color: #333;
+        }
+
+        input, textarea, select {
+            padding: 0.75rem;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 1rem;
+        }
+
+        textarea {
+            min-height: 150px;
+            resize: vertical;
+        }
+
+        .submit-button {
+            background: #4CAF50;
+            color: white;
+            padding: 1rem;
+            border: none;
+            border-radius: 4px;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: background 0.3s ease;
+        }
+
+        .submit-button:hover {
+            background: #45a049;
+        }
+
+        /* Navigation Styles */
+        .sidenav {
+            position: fixed;
+            top: 0;
+            left: -300px;
+            height: 100vh;
+            width: 300px;
+            background: white;
+            box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
+            z-index: 1001;
+            transition: left 0.3s ease;
+        }
+
+        .sidenav.active {
+            left: 0;
+        }
+
+        .sidenav-content {
+            padding: 2rem;
+        }
+        
+        .sidenav-content h2 {
+            margin: 1.5rem 0 1rem;
+            color: #333;
+            font-size: 1.25rem;
+        }
+        
+        .sidenav-content ul {
+            list-style: none;
+        }
+        
+        .sidenav-content ul li {
+            margin: 0.5rem 0;
+        }
+        
+        .sidenav-content ul li a {
+            color: #666;
+            text-decoration: none;
+            transition: color 0.3s;
+        }
+        
+        .sidenav-content ul li a:hover {
+            color: #4F46E5;
+        }
+
+        .close-btn {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: #666;
+        }
+        
+        /* Search Overlay */
+        .search-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100vh;
+            background: rgba(0, 0, 0, 0.8);
+            display: none;
+            justify-content: center;
+            align-items: flex-start;
+            padding-top: 5rem;
+            z-index: 1002;
+        }
+
+        .search-overlay.active {
+            display: flex;
+        }
+
+        .search-content {
+            background: white;
+            padding: 2rem;
+            border-radius: 8px;
+            width: 90%;
+            max-width: 600px;
+            position: relative;
+        }
+
+        .close-search {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: #666;
+        }
+
+        .search-box {
+            display: flex;
+            gap: 0.5rem;
+            margin: 1rem 0;
+        }
+
+        .search-box input {
+            flex: 1;
+            padding: 0.75rem;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 1rem;
+        }
+
+        /* Product Grid Styles */
+        .featured-products {
+            padding: 2rem;
+            background: #f9f9f9;
+        }
+        
+        .filter-bar {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-bottom: 1.5rem;
+        }
+        
+        .filter-btn {
+            padding: 0.5rem 1rem;
+            background: #f1f1f1;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .filter-btn:hover {
+            background: #e9e9e9;
+        }
+        
+        .filter-btn.active {
+            background: #4CAF50;
+            color: white;
+            border-color: #4CAF50;
+        }
+
+        .product-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 2rem;
+            margin-top: 1rem;
+        }
+
+        .product-card {
+            background: white;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            transition: transform 0.3s ease;
+        }
+
+        .product-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .product-card img {
+            width: 100%;
+            height: 200px;
+            object-fit: cover;
+        }
+
+        .product-info {
+            padding: 1rem;
+        }
+
+        .product-info h3 {
+            margin: 0;
+            font-size: 1.1rem;
+            color: #333;
+        }
+
+        .price {
+            color: #4CAF50;
+            font-weight: bold;
+            margin: 0.5rem 0;
+        }
+        .stock {
+            color: #181918;
+            font-weight: bold;
+            margin: 0.5rem 0;
+        }
+
+        .add-to-cart {
+            width: 100%;
+            padding: 0.75rem;
+            background: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background 0.3s ease;
+        }
+
+        .add-to-cart:hover {
+            background: #45a049;
+        }
+    </style>
+
+
+    <script>
+        function toggleSidenav() {
+            document.getElementById('sidenav').classList.toggle('active');
+        }
+
+        function toggleSidenavclose() {
+            document.getElementById('sidenav').classList.remove('active');
+        }
+
+        function toggleSearch() {
+            document.getElementById('searchOverlay').classList.toggle('active');
+        }
+        
+        function toggleProductForm() {
+            const formContainer = document.getElementById('form-container');
+            const editFormContainer = document.getElementById('edit-form-container');
+            if (formContainer.style.display === 'none') {
+                formContainer.style.display = 'block';
+                editFormContainer.style.display = 'none';
+            } else {
+                formContainer.style.display = 'none';
+            }
+        }
+        
+        function toggleEditForm() {
+            const formContainer = document.getElementById('edit-form-container');
+            const addFormContainer = document.getElementById('form-container');
+            if (formContainer.style.display === 'none') {
+                formContainer.style.display = 'block';
+                addFormContainer.style.display = 'none';
+            } else {
+                formContainer.style.display = 'none';
+            }
+        }
+        
+        function openEditForm(productid,productname,productprice,productstock_no) {
+            document.getElementById("edit-id").value = productid;
+            document.getElementById("edit-name").value = productname;
+            document.getElementById("edit-price").value = productprice;
+            document.getElementById("edit-stock").value = productstock_no;
+
+            const form = document.getElementById("edit-form");
+            form.action = `/edit_product/${productid}/`;  // 👈 dynamically set URL
+
+            toggleEditForm();
+        }
+
+        function toggleCategoryForm() {
+            const formContainer = document.getElementById('category-form-container');
+            if (formContainer.style.display === 'none') {
+                formContainer.style.display = 'block';
+            } else {
+                formContainer.style.display = 'none';
+            }
+        }
+        
+        function filterProducts(category) {
+            const productCards = document.querySelectorAll('.product-card');
+            const filterButtons = document.querySelectorAll('.filter-btn');
+            
+            // Update active button
+            filterButtons.forEach(button => {
+                if (button.getAttribute('data-category') === category) {
+                    button.classList.add('active');
+                } else {
+                    button.classList.remove('active');
+                }
+            });
+            
+            // Show/hide products based on category
+            productCards.forEach(card => {
+                if (category === 'all' || card.getAttribute('data-category') === category) {
+                    card.style.display = 'block';
+                } else {
+                    card.style.display = 'none';
+                }
+            });
+        }
+
+        
+        // Add event listeners
+        document.addEventListener('DOMContentLoaded', function() {
+            // Add product button
+            document.getElementById('add-product-btn').addEventListener('click', toggleProductForm);
+            // Add category button
+            document.getElementById('add-category-btn').addEventListener('click', toggleCategoryForm);
+            
+            // Filter buttons
+            const filterButtons = document.querySelectorAll('.filter-btn');
+            filterButtons.forEach(button => {
+                button.addEventListener('click', function() {
+                    const category = this.getAttribute('data-category');
+                    filterProducts(category);
+                });
+            });
+        });
+    </script>
+{% include 'footer.html' %}
+</body>
+</html>
+{% endblock %}

@@ -1,0 +1,83 @@
+{% load static %} {% block content %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Watchlist - Adora Crafts</title>
+    <link rel="stylesheet" href="{% static 'css/styles.css' %}">
+</head>
+<body>
+    {% include 'header.html' %}
+    <main class="watchlist-page">
+        <div class="watchlist-container">
+            <h1>My Watchlist</h1>
+            
+            <div class="watchlist-grid">
+                {% for item in wishlist_items %}
+                    <div class="product-card">
+                        <div class="wishlist-badge">Added {{ item.added_on|date:"F d" }}</div>
+    
+                        <img src="{{ item.product.images.first.image.url }}" 
+                             alt="{{ item.product.product_name }}" 
+                             class="wishlist-product-img">
+    
+                        <div class="product-info">
+                            <h3>{{ item.product.product_name }}</h3>
+                            <p class="price">₹{{ item.product.price }}</p>
+    
+                            
+                            <div class="product-actions">
+                                <button class="add-to-cart" onclick="addToCart('{{ item.product.id }}')">Add to Cart</button>
+                                <button class="remove-wishlist" onclick="removeFromWishlist('{{ item.id }}')">&times;</button>
+                            </div>
+                        </div>
+                    </div>
+                {% empty %}
+                    <p>No items in your watchlist.</p>
+                {% endfor %}
+            </div>
+        </div>
+    </main>
+
+    <script>
+            window.isAuthenticated = {{ request.user.is_authenticated|yesno:"true,false" }};
+        
+
+            function addToCart(productId) {
+                if (!window.isAuthenticated) {
+                    showToast('Please log in to add items to your cart', 'warning');
+                    setTimeout(() => {
+                        window.location.href = '/login/?next=' + window.location.pathname;
+                    }, 2000);
+                    return;
+                }
+  
+
+    fetch('/add_to_cart/', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': getCookie('csrftoken')  // safer if csrf token used
+        },
+        body: JSON.stringify({
+            product_id: productId,
+            quantity: 1
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        showToast(data.message, data.level || 'info');
+    })
+    .catch(error => {
+
+        showToast('Something went wrong', 'error');
+        console.error('Error:', error);
+    });
+}
+    </script>
+    
+    {% include 'footer.html' %}
+</body>
+</html>
+{% endblock %}

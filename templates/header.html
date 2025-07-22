@@ -1,0 +1,135 @@
+
+{% load static %} {% block content %}
+<!-- Search Overlay -->
+    <div class="search-overlay" id="searchOverlay">
+        <div class="search-content">
+            <button class="close-search">&times;</button>
+            <h2>Search Products</h2>
+            <div class="search-box">
+                <input type="text" placeholder="Search for products...">
+                <button class="search-btn">Search</button>
+            </div>
+            <div class="quick-links">
+                <h3>Popular Searches</h3>
+                <div class="quick-links-grid">
+                    <a href="#">Handmade Jewelry</a>
+                    <a href="#">Ceramic Vases</a>
+                    <a href="#">Wall Art</a>
+                    <a href="#">Wooden Decor</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="nav-left">
+                <a href="/index"><img src="{% static 'images/logo.jpg' %}" alt="Adora Crafts Logo" class="logo-img" style="height: 50px;
+    margin-right: 10px;
+    border-radius: 50%;"></a>
+<h1 class="logo" style="font-size: 1.5rem; margin: 0;">Adora Crafts</h1>
+            </div>
+            <div class="nav-right">
+                <a href="{% url 'index' %}" class="nav-link"><i class="fas fa-home"></i></a>
+                <a href="{% url 'categories' %}" class="nav-link">Categories</a>
+                {% if user.is_staff %}
+                <a href="{% url 'order_management' %}" class="nav-link">🛒 Order Management</a>
+                {% endif %}
+                <!-- <a href="#" class="nav-icon" onclick="toggleSearch()">🔍</a> -->
+            {% if user.is_authenticated %}
+                {% if user.is_superuser %}
+                    <a href="/product_add" class="nav-icon">➕</a>
+                {% else %}
+                    <a href="/watchlist" class="nav-icon">♥</a>
+                {% endif %}
+                <span class="username">{{ user.user_name }}</span>
+                <a href="/account" class="nav-icon">👤</a>
+                <a href="/logout" class="nav-icon">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="black" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M18.36 6.64a9 9 0 1 1-12.73 0"></path>
+                        <line x1="12" y1="2" x2="12" y2="12"></line>
+                    </svg>
+                </a>
+                {% if not user.is_superuser %}
+                    <a href="/cart" class="nav-icon cart-icon">
+                        🛒
+                    </a>
+                {% endif %}
+            {% else %}
+                <a href="/login" class="nav-icon">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="black" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                        <circle cx="12" cy="7" r="4"></circle>
+                    </svg>
+                </a>
+            {% endif %}
+        </div>
+    </div>
+</nav>
+<div id="toast-container" style="position: fixed; top: 20px; right: 20px; z-index: 10000;"></div>
+<script>
+
+function getCookie(name) {
+                let cookieValue = null;
+                if (document.cookie && document.cookie !== '') {
+                    const cookies = document.cookie.split(';');
+                    for (let cookie of cookies) {
+                        const trimmed = cookie.trim();
+                        if (trimmed.startsWith(name + '=')) {
+                            cookieValue = decodeURIComponent(trimmed.substring(name.length + 1));
+                            break;
+                        }
+                    }
+                }
+                return cookieValue;
+            }
+
+    function showToast(message, level = 'info') {
+        const toast = document.createElement('div');
+        toast.innerText = message;
+        toast.style.cssText = `
+            background-color: ${level === 'success' ? '#28a745' : level === 'error' ? '#dc3545' : level === 'warning' ? '#ffc107' : '#17a2b8'};
+            color: white;
+            padding: 12px 18px;
+            margin-bottom: 10px;
+            margin-top: 60px;
+            border-radius: 6px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            font-family: sans-serif;
+            transition: opacity 0.5s;
+        `;
+        document.getElementById('toast-container').appendChild(toast);
+        setTimeout(() => {
+            toast.style.opacity = '0';
+            setTimeout(() => toast.remove(), 500);
+        }, 3000);
+    }
+
+    // Django messages from backend
+    {% if messages %}
+        {% for message in messages %}
+            showToast("{{ message|escapejs }}", "{{ message.tags }}");
+        {% endfor %}
+    {% endif %}
+</script>
+<style>
+    .alert {
+        padding: 10px;
+        margin: 15px;
+        border-radius: 5px;
+        font-weight: bold;
+    }
+    .alert.success {
+        background-color: #d4edda;
+        color: #155724;
+    }
+    .alert.warning {
+        background-color: #fff3cd;
+        color: #856404;
+    }
+    .alert.error {
+        background-color: #f8d7da;
+        color: #721c24;
+    }
+    </style>
+    {% endblock %}

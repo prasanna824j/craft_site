@@ -1,0 +1,14 @@
+<svg width="200" height="200" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+    <!-- Background Circle -->
+    <circle cx="100" cy="100" r="90" fill="#f0f0f0"/>
+    
+    <!-- Decorative Pattern -->
+    <path d="M100 30 L170 100 L100 170 L30 100 Z" fill="none" stroke="#cccccc" stroke-width="2"/>
+    <circle cx="100" cy="100" r="40" fill="none" stroke="#cccccc" stroke-width="2"/>
+    
+    <!-- Category Icon -->
+    <path d="M85 80 L115 80 L115 70 L85 70 Z M75 90 L125 90 L125 120 L75 120 Z" fill="#999999"/>
+    
+    <!-- Text Label -->
+    <text x="100" y="150" font-family="Arial, sans-serif" font-size="14" fill="#666666" text-anchor="middle">Category</text>
+</svg>
